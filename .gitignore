@@ -1,0 +1,10 @@
+.env
+login_credential.txt
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/

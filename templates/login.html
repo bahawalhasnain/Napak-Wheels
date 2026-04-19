@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Napak Wheels{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card card shadow-sm">
+        <div class="card-body p-4 p-md-5">
+            <div class="auth-header mb-3">
+                <div class="auth-icon">
+                    <i class="fas fa-car-side"></i>
+                </div>
+                <div>
+                    <h1 class="auth-title">Welcome back</h1>
+                    <p class="auth-subtitle mb-0">Log in to manage your listings and browse cars.</p>
+                </div>
+            </div>
+
+            <form class="auth-form" method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.email.label }}</label>
+                    {{ form.email(class="form-control form-control-lg", placeholder="you@example.com") }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.password.label }}</label>
+                    {{ form.password(class="form-control form-control-lg", placeholder="********") }}
+                </div>
+
+                <button type="submit" class="btn btn-dark btn-auth w-100">
+                    <i class="fas fa-right-to-bracket me-2"></i>Login
+                </button>
+            </form>
+
+            <p class="mt-4 mb-0 text-center auth-footer">
+                No account?
+                <a href="{{ url_for('main.signup') }}" class="auth-link text-decoration-none">Create one</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

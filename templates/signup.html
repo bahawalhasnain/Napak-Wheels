@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - Napak Wheels{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div class="auth-card card shadow-sm">
+        <div class="card-body p-4 p-md-5">
+            <div class="auth-header mb-3">
+                <div class="auth-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div>
+                    <h1 class="auth-title">Create your account</h1>
+                    <p class="auth-subtitle mb-0">Sign up to post and manage your car listings.</p>
+                </div>
+            </div>
+
+            <form class="auth-form" method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.full_name.label }}</label>
+                    {{ form.full_name(class="form-control form-control-lg", placeholder="Your full name") }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">{{ form.email.label }}</label>
+                    {{ form.email(class="form-control form-control-lg", placeholder="you@example.com") }}
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.phone.label }}</label>
+                        {{ form.phone(class="form-control form-control-lg", placeholder="03XX-XXXXXXX") }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.location.label }}</label>
+                        {{ form.location(class="form-control form-control-lg", placeholder="City, State") }}
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.password.label }}</label>
+                        {{ form.password(class="form-control form-control-lg", placeholder="At least 8 characters") }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.confirm_password.label }}</label>
+                        {{ form.confirm_password(class="form-control form-control-lg", placeholder="Repeat your password") }}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-dark btn-auth w-100 mt-3">
+                    <i class="fas fa-clipboard-check me-2"></i>Sign Up
+                </button>
+            </form>
+
+            <p class="mt-4 mb-0 text-center auth-footer">
+                Already have an account?
+                <a href="{{ url_for('main.login') }}" class="auth-link text-decoration-none">Login</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

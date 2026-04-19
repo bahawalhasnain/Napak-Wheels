@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}Sell Your Car - Car Marketplace{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card form-surface-card">
+            <div class="card-header">
+                <h2><i class="fas fa-plus-circle me-2"></i>List Your Car for Sale</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="section-heading">Vehicle Information</h5>
+                            <hr>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.make.label }}</label>
+                            {{ form.make(class="form-control") }}
+                            {% if form.make.errors %}
+                                <div class="text-danger">{{ form.make.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.model.label }}</label>
+                            {{ form.model(class="form-control") }}
+                            {% if form.model.errors %}
+                                <div class="text-danger">{{ form.model.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.year.label }}</label>
+                            {{ form.year(class="form-control") }}
+                            {% if form.year.errors %}
+                                <div class="text-danger">{{ form.year.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.price.label }}</label>
+                            {{ form.price(class="form-control") }}
+                            {% if form.price.errors %}
+                                <div class="text-danger">{{ form.price.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.mileage.label }}</label>
+                            {{ form.mileage(class="form-control") }}
+                            {% if form.mileage.errors %}
+                                <div class="text-danger">{{ form.mileage.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.color.label }}</label>
+                            {{ form.color(class="form-control") }}
+                            {% if form.color.errors %}
+                                <div class="text-danger">{{ form.color.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.fuel_type.label }}</label>
+                            {{ form.fuel_type(class="form-select") }}
+                            {% if form.fuel_type.errors %}
+                                <div class="text-danger">{{ form.fuel_type.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.transmission.label }}</label>
+                            {{ form.transmission(class="form-select") }}
+                            {% if form.transmission.errors %}
+                                <div class="text-danger">{{ form.transmission.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.engine_size.label }}</label>
+                            {{ form.engine_size(class="form-control", placeholder="e.g., 2.0") }}
+                            {% if form.engine_size.errors %}
+                                <div class="text-danger">{{ form.engine_size.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">{{ form.photos.label }}</label>
+                        {{ form.photos(class="form-control", multiple=true) }}
+                        <div class="form-text">Upload up to 6 photos (JPG, JPEG, PNG, GIF, JFIF).</div>
+                        {% if form.photos.errors %}
+                            <div class="text-danger">{{ form.photos.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label">{{ form.description.label }}</label>
+                        {{ form.description(class="form-control", rows="4", placeholder="Describe your car's condition, features, service history, etc.") }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors[0] }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <h5 class="section-heading">Features</h5>
+                            <hr>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        {{ form.features(id="features-hidden") }}
+                        <input type="hidden" id="features-json" name="features_json" value="[]">
+                        <div id="features-tags" class="tag-container"></div>
+                        <div class="tag-input-wrap">
+                            <input
+                                id="features-input"
+                                type="text"
+                                class="form-control"
+                                placeholder="Type a feature (e.g., adaptive cruise control)"
+                                autocomplete="off"
+                            />
+                            <div id="features-suggestions" class="features-suggestions" style="display:none;"></div>
+                        </div>
+                        <div class="form-text mt-2">
+                            Start typing to see suggestions. Press Enter or comma to add.
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="section-heading">Contact Information</h5>
+                            <hr>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Name</label>
+                            <input class="form-control" value="{{ current_user.full_name }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.seller_phone.label }}</label>
+                            {{ form.seller_phone(class="form-control") }}
+                            {% if form.seller_phone.errors %}
+                                <div class="text-danger">{{ form.seller_phone.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input class="form-control" value="{{ current_user.email }}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.location.label }}</label>
+                            {{ form.location(class="form-control", placeholder="City, State") }}
+                            {% if form.location.errors %}
+                                <div class="text-danger">{{ form.location.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary me-md-2">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-dark">
+                            <i class="fas fa-plus-circle me-2"></i>Post Listing
+                        </button>
+                    </div>
+                </form>
+
+                <script>
+                    (function () {
+                        const featureSuggestions = {{ feature_suggestions | tojson }};
+                        const hiddenEl = document.getElementById('features-hidden');
+                        const inputEl = document.getElementById('features-input');
+                        const tagsEl = document.getElementById('features-tags');
+                        const suggestionsEl = document.getElementById('features-suggestions');
+
+                        const initial = (() => {
+                            try { return JSON.parse(hiddenEl.value || '[]'); } catch (e) { return []; }
+                        })();
+                        let selected = Array.isArray(initial) ? initial : [];
+
+                        function acronym(str) {
+                            return String(str)
+                                .split(/[\s\-]+/)
+                                .filter(Boolean)
+                                .map(w => w[0])
+                                .join('')
+                                .toLowerCase();
+                        }
+
+                        function setHidden() {
+                            const payload = JSON.stringify(selected);
+                            hiddenEl.value = payload;
+                            const rawPayloadEl = document.getElementById('features-json');
+                            if (rawPayloadEl) {
+                                rawPayloadEl.value = payload;
+                            }
+                        }
+
+                        function renderTags() {
+                            tagsEl.innerHTML = '';
+                            selected.forEach((t, idx) => {
+                                const tag = document.createElement('div');
+                                tag.className = 'tag';
+
+                                const label = document.createElement('span');
+                                label.textContent = t;
+
+                                const remove = document.createElement('button');
+                                remove.type = 'button';
+                                remove.className = 'tag-remove';
+                                remove.innerHTML = '&times;';
+                                remove.addEventListener('click', function () {
+                                    selected.splice(idx, 1);
+                                    setHidden();
+                                    renderTags();
+                                    inputEl.focus();
+                                });
+
+                                tag.appendChild(label);
+                                tag.appendChild(remove);
+                                tagsEl.appendChild(tag);
+                            });
+                        }
+
+                        function showSuggestions(list) {
+                            if (!list.length) {
+                                suggestionsEl.style.display = 'none';
+                                suggestionsEl.innerHTML = '';
+                                return;
+                            }
+                            suggestionsEl.style.display = 'block';
+                            suggestionsEl.innerHTML = '';
+                            list.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'feature-suggestion';
+                                div.textContent = item;
+                                div.addEventListener('click', function () {
+                                    addTag(item);
+                                });
+                                suggestionsEl.appendChild(div);
+                            });
+                        }
+
+                        function scoreFeature(feature, q) {
+                            const f = feature.toLowerCase();
+                            const query = q.toLowerCase().trim();
+                            if (!query) return 0;
+
+                            let score = 0;
+                            const compact = query.replace(/\s+/g, '');
+                            const fCompact = f.replace(/[^a-z0-9]/gi, '');
+                            const a = acronym(feature).replace(/[^a-z0-9]/gi, '');
+
+                            if (f === query) score += 100;
+                            if (f.includes(query)) score += 50;
+
+                            const tokens = query.split(/\s+/).filter(Boolean);
+                            if (tokens.length && tokens.every(t => f.includes(t))) score += 35;
+
+                            if (a.startsWith(compact)) score += 45;
+                            if (a.includes(compact)) score += 15;
+
+                            if (fCompact.includes(compact)) score += 10;
+                            return score;
+                        }
+
+                        function getSuggestions(q) {
+                            const query = q.trim();
+                            if (!query) return [];
+                            const remaining = featureSuggestions.filter(f => !selected.includes(f));
+
+                            return remaining
+                                .map(f => ({ f, s: scoreFeature(f, query) }))
+                                .filter(x => x.s > 0)
+                                .sort((a, b) => b.s - a.s)
+                                .slice(0, 8)
+                                .map(x => x.f);
+                        }
+
+                        function addTag(raw) {
+                            const tag = String(raw || '').trim();
+                            if (!tag) return;
+                            if (!selected.includes(tag)) {
+                                selected.push(tag);
+                                setHidden();
+                                renderTags();
+                            }
+                            inputEl.value = '';
+                            suggestionsEl.style.display = 'none';
+                        }
+
+                        function addTagsFromText(text) {
+                            const parts = String(text || '')
+                                .split(',')
+                                .map(x => x.trim())
+                                .filter(Boolean);
+                            parts.forEach(addTag);
+                        }
+
+                        inputEl.addEventListener('input', function () {
+                            showSuggestions(getSuggestions(inputEl.value));
+                        });
+
+                        inputEl.addEventListener('keydown', function (e) {
+                            if (e.key === 'Enter' || e.key === ',') {
+                                e.preventDefault();
+                                addTagsFromText(inputEl.value);
+                            }
+                        });
+
+                        document.addEventListener('click', function (e) {
+                            if (!suggestionsEl.contains(e.target) && e.target !== inputEl) {
+                                suggestionsEl.style.display = 'none';
+                            }
+                        });
+
+                        // If user types a feature but doesn't press Enter/comma,
+                        // capture it right before form submission.
+                        const formEl = inputEl.closest('form');
+                        if (formEl) {
+                            formEl.addEventListener('submit', function () {
+                                const pending = (inputEl.value || '').trim().replace(/,+$/, '');
+                                if (pending) {
+                                    addTagsFromText(pending);
+                                } else {
+                                    setHidden();
+                                }
+                                setHidden();
+                            });
+                        }
+
+                        renderTags();
+                        setHidden();
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
