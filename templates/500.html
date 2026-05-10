@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}500 - Napak Wheels{% endblock %}
+
+{% block content %}
+<div class="notfound-wrap">
+    <div class="notfound-card text-center">
+        <div class="notfound-icon mb-3">
+            <i class="fas fa-triangle-exclamation"></i>
+        </div>
+        <h1 class="notfound-code">500</h1>
+        <h3 class="notfound-title mb-2">Something went wrong</h3>
+        <p class="text-secondary mb-4">An unexpected error occurred. We've logged it and will look into it.</p>
+
+        <a href="{{ url_for('main.index') }}" class="btn btn-dark btn-lg">
+            <i class="fas fa-route me-2"></i>Back to Browse Cars
+        </a>
+    </div>
+</div>
+{% endblock %}

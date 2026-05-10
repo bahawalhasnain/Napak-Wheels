@@ -1,0 +1,55 @@
+{% extends "account/_settings_layout.html" %}
+
+{% block settings_title %}Security{% endblock %}
+
+{% block settings_content %}
+<div class="card settings-card">
+  <div class="card-body p-4">
+    <header class="settings-card-header">
+      <h2 class="h5 mb-1">Change password</h2>
+      <p class="text-secondary small mb-0">Use a strong password you don't reuse anywhere else.</p>
+    </header>
+
+    <form method="POST" class="settings-form mt-4" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="settings-form-row">
+        <label class="form-label">{{ form.current_password.label }}</label>
+        {{ form.current_password(class="form-control", autocomplete="current-password") }}
+        {% for err in form.current_password.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+      </div>
+
+      <div class="settings-form-row">
+        <label class="form-label">{{ form.new_password.label }}</label>
+        {{ form.new_password(class="form-control", autocomplete="new-password") }}
+        <div class="form-text">At least 8 characters.</div>
+        {% for err in form.new_password.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+      </div>
+
+      <div class="settings-form-row">
+        <label class="form-label">{{ form.confirm_password.label }}</label>
+        {{ form.confirm_password(class="form-control", autocomplete="new-password") }}
+        {% for err in form.confirm_password.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+      </div>
+
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-dark">
+          <i class="fas fa-lock me-2"></i>Update password
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card settings-card mt-3">
+  <div class="card-body p-4">
+    <header class="settings-card-header mb-3">
+      <h2 class="h5 mb-1">Active session</h2>
+      <p class="text-secondary small mb-0">Sign out of this browser.</p>
+    </header>
+    <a href="{{ url_for('main.logout') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-right-from-bracket me-2"></i>Sign out
+    </a>
+  </div>
+</div>
+{% endblock %}

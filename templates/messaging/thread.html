@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}{{ other.full_name }} - Messages{% endblock %}
+{% block body_class %}chat-page{% endblock %}
+
+{% macro initials(name) -%}
+    {%- set parts = (name or '').split() -%}
+    {%- if parts|length == 0 -%}?
+    {%- elif parts|length == 1 -%}{{ parts[0][:1] }}
+    {%- else -%}{{ parts[0][:1] }}{{ parts[-1][:1] }}
+    {%- endif -%}
+{%- endmacro %}
+
+{% macro day_label(d) -%}
+    {%- if d == today -%}Today
+    {%- elif d == yesterday -%}Yesterday
+    {%- else -%}{{ d.strftime('%a, %d %b %Y') }}
+    {%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<div class="chat-shell">
+
+    <header class="chat-header">
+        <a class="chat-back" href="{{ url_for('messaging.inbox') }}" title="Back to inbox">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <div class="chat-avatar" data-color="{{ other.id % 6 }}">{{ initials(other.full_name) }}</div>
+        <div class="chat-meta">
+            <div class="chat-name">{{ other.full_name }}</div>
+            <a class="chat-sub" href="{{ url_for('main.car_detail', id=convo.car.id) }}">
+                {{ convo.car.year }} {{ convo.car.make }} {{ convo.car.model }}
+                &middot; {{ convo.car.formatted_price }}
+            </a>
+        </div>
+        <div class="chat-header-actions d-none d-md-flex">
+            <a href="{{ url_for('main.car_detail', id=convo.car.id) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-car me-1"></i>View listing
+            </a>
+        </div>
+    </header>
+
+    <div class="chat-body" id="chat-body">
+        {% if convo.messages %}
+            {% set ns = namespace(prev_date=None, prev_sender=None) %}
+            {% for m in convo.messages %}
+                {% set this_date = m.created_at.date() %}
+                {% if this_date != ns.prev_date %}
+                    <div class="chat-day-sep"><span>{{ day_label(this_date) }}</span></div>
+                {% endif %}
+
+                {% set mine = m.sender_id == current_user.id %}
+                {% set new_sender = (m.sender_id != ns.prev_sender) or (this_date != ns.prev_date) %}
+
+                <div class="chat-row {{ 'chat-row-mine' if mine else 'chat-row-them' }} {{ 'new-sender' if new_sender }}">
+                    <div class="chat-bubble">{{ m.body }}<span class="chat-time">{{ m.created_at.strftime('%H:%M') }}</span></div>
+                </div>
+
+                {% set ns.prev_date = this_date %}
+                {% set ns.prev_sender = m.sender_id %}
+            {% endfor %}
+        {% else %}
+            <div class="chat-empty">
+                <i class="far fa-comment-dots"></i>
+                <p>No messages yet. Say hello to {{ other.full_name }}!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <form method="POST" class="chat-composer" id="chat-composer">
+        {{ form.hidden_tag() }}
+        {{ form.body(
+            class_="chat-input form-control",
+            rows=1,
+            placeholder="Write a message... (Shift+Enter for new line)",
+            autocomplete="off",
+            id="chat-input",
+        ) }}
+        <button class="chat-send" type="submit" title="Send" id="chat-send">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </form>
+
+</div>
+
+<script>
+    (function () {
+        const body = document.getElementById('chat-body');
+        const input = document.getElementById('chat-input');
+        const form = document.getElementById('chat-composer');
+        const sendBtn = document.getElementById('chat-send');
+
+        if (body) {
+            body.scrollTop = body.scrollHeight;
+        }
+
+        if (input) {
+            const autosize = () => {
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 140) + 'px';
+            };
+            input.addEventListener('input', autosize);
+            autosize();
+            input.focus();
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (input.value.trim().length === 0) return;
+                    form.requestSubmit ? form.requestSubmit() : form.submit();
+                }
+            });
+        }
+
+        if (form && sendBtn) {
+            const updateSendState = () => {
+                sendBtn.disabled = input.value.trim().length === 0;
+            };
+            input.addEventListener('input', updateSendState);
+            updateSendState();
+        }
+    })();
+</script>
+{% endblock %}

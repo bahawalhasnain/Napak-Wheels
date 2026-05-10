@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Searches - Napak Wheels{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3"><i class="fas fa-bookmark me-2"></i>Saved Searches</h1>
+<p class="text-muted">Get notified by email when a new car matches one of your searches.</p>
+
+{% if items %}
+    <div class="list-group">
+        {% for s in items %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>{{ s.name }}</strong>
+                        <div class="text-muted small">
+                            {% set p = s.params_dict %}
+                            {% for key, value in p.items() %}
+                                <span class="badge bg-light text-dark border me-1">{{ key }}: {{ value }}</span>
+                            {% endfor %}
+                            {% if not p %}
+                                <em>(no filters)</em>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted small mt-1">
+                            Created {{ s.created_at.strftime('%Y-%m-%d') }}
+                            {% if s.last_notified_at %}
+                                &middot; last alert {{ s.last_notified_at.strftime('%Y-%m-%d') }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 align-items-start">
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="{{ url_for('main.index', **s.params_dict) }}">Run</a>
+                        <form method="POST" action="{{ url_for('saved_searches.toggle', search_id=s.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button class="btn btn-sm {{ 'btn-success' if s.alerts_enabled else 'btn-outline-secondary' }}">
+                                {{ 'Alerts on' if s.alerts_enabled else 'Alerts off' }}
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('saved_searches.delete', search_id=s.id) }}"
+                              onsubmit="return confirm('Delete this saved search?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-muted">No saved searches yet. Run a search on the home page, then save it.</p>
+{% endif %}
+{% endblock %}

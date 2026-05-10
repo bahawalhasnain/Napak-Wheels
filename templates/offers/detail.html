@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Offer Details - Napak Wheels{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3"><i class="fas fa-handshake me-2"></i>Offer for {{ offer.car.year }} {{ offer.car.make }} {{ offer.car.model }}</h1>
+<p class="text-muted">Asking price: <strong>{{ offer.car.formatted_price }}</strong></p>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header"><strong>Negotiation history</strong></div>
+            <ul class="list-group list-group-flush">
+                {% for h in history %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <span>
+                                <strong>{{ h.formatted_amount }}</strong>
+                                <span class="text-muted">by {{ h.proposed_by }}</span>
+                            </span>
+                            <span class="badge bg-{{
+                                {'pending': 'warning text-dark',
+                                 'countered': 'info text-dark',
+                                 'accepted': 'success',
+                                 'rejected': 'secondary',
+                                 'withdrawn': 'secondary'}.get(h.status, 'secondary')
+                            }}">{{ h.status }}</span>
+                        </div>
+                        {% if h.note %}<div class="text-muted small mt-1">{{ h.note }}</div>{% endif %}
+                        <div class="text-muted small">{{ h.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        {% if offer.is_open %}
+            <div class="card mb-3">
+                <div class="card-header"><strong>Actions</strong></div>
+                <div class="card-body">
+                    {% if is_seller %}
+                        <form method="POST" action="{{ url_for('offers.accept', offer_id=offer.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button class="btn btn-success">Accept</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('offers.reject', offer_id=offer.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button class="btn btn-outline-secondary">Reject</button>
+                        </form>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('offers.withdraw', offer_id=offer.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button class="btn btn-outline-secondary">Withdraw</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><strong>Counter-offer</strong></div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('offers.counter', offer_id=offer.id) }}">
+                        {{ counter_form.hidden_tag() }}
+                        <div class="mb-2">{{ counter_form.amount(class="form-control", placeholder="Counter amount") }}</div>
+                        <div class="mb-2">{{ counter_form.note(class="form-control", rows=2, placeholder="Optional note") }}</div>
+                        <button class="btn btn-primary">Send Counter-offer</button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-secondary">This offer is closed (status: {{ offer.status }}).</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

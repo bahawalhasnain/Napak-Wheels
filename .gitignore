@@ -8,3 +8,13 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
+
+# Local data
+uploads/
+test_uploads/
+*.db
+instance/
+
+# Editor
+.vscode/
+.idea/

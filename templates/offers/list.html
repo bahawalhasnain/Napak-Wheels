@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Sent' if mode == 'sent' else 'Received' }} Offers - Napak Wheels{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">
+        <i class="fas fa-handshake me-2"></i>
+        {{ 'Offers I Sent' if mode == 'sent' else 'Offers I Received' }}
+    </h1>
+    <div class="btn-group">
+        <a href="{{ url_for('offers.received') }}" class="btn btn-sm btn-outline-secondary {{ 'active' if mode == 'received' }}">Received</a>
+        <a href="{{ url_for('offers.sent') }}" class="btn btn-sm btn-outline-secondary {{ 'active' if mode == 'sent' }}">Sent</a>
+    </div>
+</div>
+
+{% if offers %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Car</th>
+                    <th>{{ 'Buyer' if mode == 'received' else 'Seller' }}</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Sent</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in offers %}
+                    {% set party = o.buyer if mode == 'received' else o.seller %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('main.car_detail', id=o.car.id) }}">
+                                {{ o.car.year }} {{ o.car.make }} {{ o.car.model }}
+                            </a>
+                        </td>
+                        <td>{{ party.full_name }}</td>
+                        <td>{{ o.formatted_amount }}</td>
+                        <td>
+                            <span class="badge bg-{{
+                                {'pending': 'warning text-dark',
+                                 'countered': 'info text-dark',
+                                 'accepted': 'success',
+                                 'rejected': 'secondary',
+                                 'withdrawn': 'secondary'}.get(o.status, 'secondary')
+                            }}">{{ o.status }}</span>
+                        </td>
+                        <td>{{ o.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('offers.detail', offer_id=o.id) }}">Open</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="text-muted text-center py-4">No offers here yet.</p>
+{% endif %}
+{% endblock %}

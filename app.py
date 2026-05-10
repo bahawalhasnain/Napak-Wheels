@@ -1,90 +1,175 @@
-import os
+"""Application factory for Napak Wheels."""
+
+from __future__ import annotations
+
 import logging
+import os
 from time import perf_counter
-from flask import Flask, g, request
-from werkzeug.middleware.proxy_fix import ProxyFix
-from sqlalchemy import inspect, text
+
+import click
 from dotenv import load_dotenv
-from extensions import db
+from flask import Flask, g, jsonify, redirect, render_template, request, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 
-# Set up console logging
-LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL, logging.INFO),
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-)
-# Ensure values in local .env replace any stale system env variables.
+
 load_dotenv(override=True)
-from config import Config
-
-# Create the app
-app = Flask(__name__)
-app.config.from_object(Config)
-app.secret_key = app.config["SECRET_KEY"]
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
-app.logger.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
-logging.getLogger("werkzeug").setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
-logger = app.logger
 
 
-@app.before_request
-def log_request_start():
-    g.request_start_time = perf_counter()
-    logger.info("Request started: %s %s", request.method, request.path)
+def create_app(config_object: str | type | None = None) -> Flask:
+    """Construct and configure the Flask application."""
 
+    from config import Config
+    from extensions import csrf, db, login_manager, migrate
+    from tasks import init_celery
 
-@app.after_request
-def log_request_end(response):
-    duration_ms = (perf_counter() - g.get("request_start_time", perf_counter())) * 1000
-    logger.info(
-        "Request completed: %s %s -> %s (%.2f ms)",
-        request.method,
-        request.path,
-        response.status_code,
-        duration_ms,
+    log_level = os.environ.get("LOG_LEVEL", "INFO").upper()
+    logging.basicConfig(
+        level=getattr(logging, log_level, logging.INFO),
+        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     )
-    return response
 
-# Configure file uploads
-app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+    app = Flask(__name__)
+    app.config.from_object(config_object or Config)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+    app.logger.setLevel(getattr(logging, app.config.get("LOG_LEVEL", "INFO"), logging.INFO))
+    logging.getLogger("werkzeug").setLevel(app.logger.level)
 
-# Create upload directory if it doesn't exist
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
-# Initialize the app with the extension
-db.init_app(app)
-logger.info("Database URL loaded. Driver: %s", app.config["SQLALCHEMY_DATABASE_URI"].split(":")[0])
+    db.init_app(app)
+    migrate.init_app(app, db)
+    login_manager.init_app(app)
+    csrf.init_app(app)
+    init_celery(app)
 
-with app.app_context():
-    # Import models to ensure tables are created
-    import models
-    logger.info("Creating database tables if missing...")
-    db.create_all()
-    logger.info("Database initialization completed.")
+    @login_manager.unauthorized_handler
+    def _on_unauthorized():
+        if request.path.startswith("/api/"):
+            return jsonify({"error": "authentication required"}), 401
+        return redirect(url_for("main.login", next=request.path))
 
-    # Lightweight schema migration for existing SQLite databases only.
-    inspector = inspect(db.engine)
-    if db.engine.dialect.name == "sqlite":
-        if inspector.has_table("car"):
-            car_columns = {col["name"] for col in inspector.get_columns("car")}
-            if "user_id" not in car_columns:
-                db.session.execute(text("ALTER TABLE car ADD COLUMN user_id INTEGER"))
-                db.session.commit()
-            if "features" not in car_columns:
-                db.session.execute(text("ALTER TABLE car ADD COLUMN features TEXT"))
-                db.session.commit()
+    app.logger.info(
+        "Database URL loaded. Driver: %s",
+        app.config["SQLALCHEMY_DATABASE_URI"].split(":")[0],
+    )
 
-        if inspector.has_table("user"):
-            user_columns = {col["name"] for col in inspector.get_columns("user")}
-            if "phone" not in user_columns:
-                db.session.execute(text("ALTER TABLE user ADD COLUMN phone VARCHAR(20)"))
-                db.session.commit()
-            if "location" not in user_columns:
-                db.session.execute(text("ALTER TABLE user ADD COLUMN location VARCHAR(100)"))
-                db.session.commit()
+    with app.app_context():
+        import models  # noqa: F401  - register tables for migrations
 
-    # Import routes after app is configured
-    from routes import bp
-    app.register_blueprint(bp)
-    logger.info("Blueprints registered successfully.")
+        from routes import bp as main_bp
+        from api import api_bp
+        from blueprints.messaging import messaging_bp
+        from blueprints.offers import offers_bp
+        from blueprints.test_drives import test_drives_bp
+        from blueprints.saved_searches import saved_searches_bp
+        from blueprints.reports import reports_bp
+        from blueprints.notifications import notifications_bp
+        from blueprints.admin import admin_bp
+        from blueprints.account import account_bp
+
+        for blueprint in (
+            main_bp, api_bp, messaging_bp, offers_bp, test_drives_bp,
+            saved_searches_bp, reports_bp, notifications_bp, admin_bp, account_bp,
+        ):
+            app.register_blueprint(blueprint)
+
+        csrf.exempt(api_bp)
+
+        _register_jinja_helpers(app)
+
+        from admin_panel import init_admin_panel
+        init_admin_panel(app)
+
+        if app.config.get("TESTING"):
+            db.create_all()
+
+    _register_request_logging(app)
+    _register_error_handlers(app)
+    _register_cli(app)
+    return app
+
+
+_AVATAR_PALETTE = (
+    "#1f6feb", "#7c3aed", "#db2777", "#0ea5e9", "#22c55e",
+    "#f97316", "#ef4444", "#14b8a6", "#a855f7", "#eab308",
+)
+
+
+def _register_jinja_helpers(app: Flask) -> None:
+    def avatar_color(seed: str) -> str:
+        seed = (seed or "?").strip().lower()
+        bucket = sum(ord(ch) for ch in seed) if seed else 0
+        return _AVATAR_PALETTE[bucket % len(_AVATAR_PALETTE)]
+
+    app.jinja_env.globals["avatar_color"] = avatar_color
+
+
+def _register_request_logging(app: Flask) -> None:
+    @app.before_request
+    def _log_start():
+        g.request_start_time = perf_counter()
+        app.logger.info("Request started: %s %s", request.method, request.path)
+
+    @app.after_request
+    def _log_end(response):
+        duration_ms = (perf_counter() - g.get("request_start_time", perf_counter())) * 1000
+        app.logger.info(
+            "Request completed: %s %s -> %s (%.2f ms)",
+            request.method, request.path, response.status_code, duration_ms,
+        )
+        return response
+
+
+def _register_error_handlers(app: Flask) -> None:
+    from extensions import db
+
+    @app.errorhandler(403)
+    def forbidden(_error):
+        return render_template("403.html"), 403
+
+    @app.errorhandler(404)
+    def not_found(_error):
+        return render_template("404.html"), 404
+
+    @app.errorhandler(500)
+    def internal(_error):
+        db.session.rollback()
+        return render_template("500.html"), 500
+
+
+def _register_cli(app: Flask) -> None:
+    from extensions import db
+    from models import User
+
+    @app.cli.command("make-admin")
+    @click.argument("email")
+    def make_admin(email):
+        """Grant admin privileges to a user by email."""
+
+        user = User.query.filter_by(email=email.lower()).first()
+        if not user:
+            click.echo(f"User not found: {email}")
+            return
+        user.is_admin = True
+        db.session.commit()
+        click.echo(f"{email} is now an admin.")
+
+    @app.cli.command("revoke-admin")
+    @click.argument("email")
+    def revoke_admin(email):
+        """Revoke admin privileges from a user by email."""
+
+        user = User.query.filter_by(email=email.lower()).first()
+        if not user:
+            click.echo(f"User not found: {email}")
+            return
+        user.is_admin = False
+        db.session.commit()
+        click.echo(f"{email} is no longer an admin.")
+
+
+# Note: do not auto-instantiate at module import time. The Flask CLI auto-detects
+# the ``create_app`` factory, ``main.py`` calls it explicitly, and tests inject
+# their own config. Auto-creating here would boot a production-config app every
+# time this module is imported (e.g. by pytest), which causes Celery to bind to
+# the wrong Flask app and breaks ``db.session`` lookups in background tasks.

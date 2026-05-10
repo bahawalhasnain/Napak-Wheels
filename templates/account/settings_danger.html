@@ -1,0 +1,46 @@
+{% extends "account/_settings_layout.html" %}
+
+{% block settings_title %}Danger zone{% endblock %}
+
+{% block settings_content %}
+<div class="card settings-card settings-danger-card">
+  <div class="card-body p-4">
+    <header class="settings-card-header">
+      <h2 class="h5 mb-1 text-danger">
+        <i class="fas fa-triangle-exclamation me-2"></i>Deactivate account
+      </h2>
+      <p class="text-secondary small mb-0">
+        This will hide all of your listings, turn off saved-search alerts, and sign
+        you out. We keep your conversations and offer history intact so the people
+        you've talked to don't see broken threads. Contact support to permanently
+        erase all data.
+      </p>
+    </header>
+
+    <form method="POST" class="settings-form mt-4" novalidate
+          onsubmit="return confirm('Are you sure? Your listings will be hidden and you will be signed out.');">
+      {{ form.hidden_tag() }}
+
+      <div class="settings-form-row">
+        <label class="form-label">{{ form.confirm_password.label }}</label>
+        {{ form.confirm_password(class="form-control", autocomplete="current-password") }}
+        {% for err in form.confirm_password.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+      </div>
+
+      <div class="settings-form-row">
+        <label class="form-label">{{ form.confirm_text.label }}</label>
+        {{ form.confirm_text(class="form-control", placeholder="DELETE", autocomplete="off") }}
+        <div class="form-text">Type the word DELETE in capital letters to confirm.</div>
+        {% for err in form.confirm_text.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+      </div>
+
+      <div class="settings-actions">
+        <a href="{{ url_for('account.profile') }}" class="btn btn-link text-secondary">Cancel</a>
+        <button type="submit" class="btn btn-danger">
+          <i class="fas fa-user-slash me-2"></i>Deactivate my account
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Admin - Napak Wheels{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <h1 class="h3 mb-0"><i class="fas fa-chart-line me-2"></i>Analytics</h1>
+  <div class="btn-group btn-group-sm">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+      <i class="fas fa-arrow-left me-1"></i>Back to dashboard
+    </a>
+    <a href="{{ url_for('admin.export_cars') }}" class="btn btn-outline-dark">
+      <i class="fas fa-file-csv me-1"></i>Export cars
+    </a>
+    <a href="{{ url_for('admin.export_users') }}" class="btn btn-outline-dark">
+      <i class="fas fa-file-csv me-1"></i>Export users
+    </a>
+    <a href="{{ url_for('admin.export_reports') }}" class="btn btn-outline-dark">
+      <i class="fas fa-file-csv me-1"></i>Export reports
+    </a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-muted small">Total listings</div>
+        <div class="h3 mb-0">{{ conversion.total }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-muted small">Active</div>
+        <div class="h3 mb-0">{{ conversion.active }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-muted small">Sold</div>
+        <div class="h3 mb-0">{{ conversion.sold }}</div>
+        <div class="small text-success">{{ conversion.sold_pct }}% conversion</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-md-3">
+    <div class="card h-100">
+      <div class="card-body">
+        <div class="text-muted small">Taken down</div>
+        <div class="h3 mb-0">{{ conversion.taken_down }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header"><strong>New listings - last 30 days</strong></div>
+      <div class="card-body">
+        <canvas id="listingsChart" height="120"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header"><strong>Conversion to sold</strong></div>
+      <div class="card-body">
+        <canvas id="conversionChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header"><strong>Top makes</strong></div>
+      <div class="card-body">
+        <canvas id="makesChart" height="160"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header"><strong>Page views - last 30 days</strong></div>
+      <div class="card-body">
+        <canvas id="viewsChart" height="160"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><strong>Most viewed listings</strong></div>
+  <div class="list-group list-group-flush">
+    {% for car in most_viewed %}
+      <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+         href="{{ url_for('main.car_detail', id=car.id) }}">
+        <span>
+          <strong>{{ car.year }} {{ car.make }} {{ car.model }}</strong>
+          <span class="text-muted small ms-2">{{ car.location }}</span>
+        </span>
+        <span class="badge bg-dark rounded-pill">{{ car.view_count or 0 }} views</span>
+      </a>
+    {% else %}
+      <div class="list-group-item text-muted">No views recorded yet.</div>
+    {% endfor %}
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const listingsData = {{ listings_per_day | tojson }};
+  const viewsData = {{ views_per_day | tojson }};
+  const topMakes = {{ top_makes | tojson }};
+  const conversion = {{ conversion | tojson }};
+
+  const fmtDay = (iso) => {
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+
+  new Chart(document.getElementById("listingsChart"), {
+    type: "line",
+    data: {
+      labels: Object.keys(listingsData).map(fmtDay),
+      datasets: [{
+        label: "Listings",
+        data: Object.values(listingsData),
+        borderColor: "#0d6efd",
+        backgroundColor: "rgba(13,110,253,.15)",
+        tension: 0.3,
+        fill: true,
+        pointRadius: 2,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+    },
+  });
+
+  new Chart(document.getElementById("viewsChart"), {
+    type: "bar",
+    data: {
+      labels: Object.keys(viewsData).map(fmtDay),
+      datasets: [{
+        label: "Views",
+        data: Object.values(viewsData),
+        backgroundColor: "rgba(25,135,84,.65)",
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+    },
+  });
+
+  new Chart(document.getElementById("makesChart"), {
+    type: "bar",
+    data: {
+      labels: topMakes.map(x => x.make),
+      datasets: [{
+        label: "Listings",
+        data: topMakes.map(x => x.count),
+        backgroundColor: "rgba(255,159,64,.7)",
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { precision: 0 } } },
+    },
+  });
+
+  new Chart(document.getElementById("conversionChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["Sold", "Active", "Taken down"],
+      datasets: [{
+        data: [conversion.sold, conversion.active, conversion.taken_down],
+        backgroundColor: ["#198754", "#0d6efd", "#dc3545"],
+      }],
+    },
+    options: { responsive: true, plugins: { legend: { position: "bottom" } } },
+  });
+})();
+</script>
+{% endblock %}

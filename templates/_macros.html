@@ -1,0 +1,48 @@
+{# -----------------------------------------------------------------------
+   Reusable Jinja macros (avatar, stat tile, empty state, etc.)
+   ----------------------------------------------------------------------- #}
+
+{# avatar(name, email='', size=40, class_='') - initials in a colored circle.
+   Color is deterministic from email/name so the same user always gets the
+   same color across the app. #}
+{% macro avatar(name, email='', size=40, class_='') -%}
+  {%- set display = (name or email or '?') -%}
+  {%- set parts = display.strip().split() -%}
+  {%- if parts | length == 0 -%}
+    {%- set initials = '?' -%}
+  {%- elif parts | length == 1 -%}
+    {%- set initials = parts[0][:2] | upper -%}
+  {%- else -%}
+    {%- set initials = (parts[0][:1] ~ parts[-1][:1]) | upper -%}
+  {%- endif -%}
+  {%- set color = avatar_color(email or name or '?') -%}
+  <span class="user-avatar {{ class_ }}"
+        style="--avatar-size: {{ size }}px; --avatar-bg: {{ color }};"
+        aria-label="{{ display }}">{{ initials }}</span>
+{%- endmacro %}
+
+
+{# Empty state for lists (icon, title, message, optional CTA). #}
+{% macro empty_state(icon, title, message='', cta_label='', cta_url='') -%}
+<div class="empty-state">
+  <div class="empty-state-icon"><i class="{{ icon }}"></i></div>
+  <h5 class="empty-state-title">{{ title }}</h5>
+  {% if message %}<p class="empty-state-msg">{{ message }}</p>{% endif %}
+  {% if cta_label and cta_url %}
+    <a href="{{ cta_url }}" class="btn btn-dark btn-sm mt-2">{{ cta_label }}</a>
+  {% endif %}
+</div>
+{%- endmacro %}
+
+
+{# Compact stat tile used on profile + dashboards. #}
+{% macro stat_tile(label, value, icon='', sub='', color='') -%}
+<div class="stat-tile {{ color }}">
+  {% if icon %}<div class="stat-tile-icon"><i class="{{ icon }}"></i></div>{% endif %}
+  <div class="stat-tile-body">
+    <div class="stat-tile-label">{{ label }}</div>
+    <div class="stat-tile-value">{{ value }}</div>
+    {% if sub %}<div class="stat-tile-sub">{{ sub }}</div>{% endif %}
+  </div>
+</div>
+{%- endmacro %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_macros.html" import avatar %}
+
+{% block title %}{{ self.settings_title() }} - Settings{% endblock %}
+
+{% block settings_title %}Settings{% endblock %}
+
+{% block content %}
+<div class="settings-shell">
+
+  <header class="settings-header">
+    <div class="d-flex align-items-center gap-3">
+      {{ avatar(current_user.full_name, current_user.email, size=56) }}
+      <div>
+        <h1 class="h4 mb-0">Settings</h1>
+        <div class="text-secondary small">{{ current_user.email }}</div>
+      </div>
+    </div>
+    <a href="{{ url_for('account.profile') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="fas fa-user me-1"></i>View profile
+    </a>
+  </header>
+
+  <div class="settings-grid">
+    <nav class="settings-nav">
+      <a href="{{ url_for('account.settings_account') }}"
+         class="settings-nav-item {{ 'active' if active_tab == 'account' }}">
+        <i class="fas fa-user"></i>
+        <span>Account</span>
+      </a>
+      <a href="{{ url_for('account.settings_security') }}"
+         class="settings-nav-item {{ 'active' if active_tab == 'security' }}">
+        <i class="fas fa-lock"></i>
+        <span>Security</span>
+      </a>
+      <a href="{{ url_for('account.settings_notifications') }}"
+         class="settings-nav-item {{ 'active' if active_tab == 'notifications' }}">
+        <i class="fas fa-bell"></i>
+        <span>Notifications</span>
+      </a>
+      <a href="{{ url_for('saved_searches.list_searches') }}" class="settings-nav-item">
+        <i class="fas fa-bookmark"></i>
+        <span>Saved searches</span>
+      </a>
+      <a href="{{ url_for('account.settings_danger') }}"
+         class="settings-nav-item settings-nav-danger {{ 'active' if active_tab == 'danger' }}">
+        <i class="fas fa-triangle-exclamation"></i>
+        <span>Danger zone</span>
+      </a>
+    </nav>
+
+    <main class="settings-content">
+      {% block settings_content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}

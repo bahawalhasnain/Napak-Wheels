@@ -1,0 +1,74 @@
+{% extends "account/_settings_layout.html" %}
+
+{% block settings_title %}Notifications{% endblock %}
+
+{% block settings_content %}
+<div class="card settings-card">
+  <div class="card-body p-4">
+    <header class="settings-card-header">
+      <h2 class="h5 mb-1">Email preferences</h2>
+      <p class="text-secondary small mb-0">Decide what shows up in your inbox.</p>
+    </header>
+
+    <form method="POST" class="settings-form mt-4">
+      {{ form.hidden_tag() }}
+
+      <div class="settings-toggle">
+        <div>
+          <div class="settings-toggle-label">{{ form.email_alerts_enabled.label.text }}</div>
+          <div class="settings-toggle-help">
+            We'll only email you when a brand-new listing matches one of your saved searches.
+          </div>
+        </div>
+        <label class="form-switch">
+          {{ form.email_alerts_enabled(class="form-check-input") }}
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-actions">
+        <button type="submit" class="btn btn-dark">
+          <i class="fas fa-floppy-disk me-2"></i>Save preferences
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card settings-card mt-3">
+  <div class="card-body p-4">
+    <header class="settings-card-header">
+      <h2 class="h5 mb-1">In-app notifications</h2>
+      <p class="text-secondary small mb-0">
+        You have <strong>{{ unread_count }}</strong> unread notification{{ '' if unread_count == 1 else 's' }}.
+      </p>
+    </header>
+
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      <a href="{{ url_for('notifications.list_notifications') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-bell me-1"></i>Open inbox
+      </a>
+      <form method="POST" action="{{ url_for('account.mark_all_notifications_read') }}" class="d-inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-outline-dark btn-sm" {% if not unread_count %}disabled{% endif %}>
+          <i class="fas fa-check-double me-1"></i>Mark all read
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="card settings-card mt-3">
+  <div class="card-body p-4">
+    <header class="settings-card-header">
+      <h2 class="h5 mb-1">Saved searches</h2>
+      <p class="text-secondary small mb-0">
+        {{ saved_with_alerts }} of {{ saved_search_count }} saved search{{ '' if saved_search_count == 1 else 'es' }} have alerts on.
+      </p>
+    </header>
+    <a href="{{ url_for('saved_searches.list_searches') }}" class="btn btn-outline-secondary btn-sm mt-2">
+      <i class="fas fa-bookmark me-1"></i>Manage saved searches
+    </a>
+  </div>
+</div>
+{% endblock %}
