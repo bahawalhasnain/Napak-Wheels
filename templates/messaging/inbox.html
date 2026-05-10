@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Messages - Napak Wheels{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-comments me-2"></i>Messages</h1>
+
+{% if threads %}
+    <div class="list-group">
+        {% for t in threads %}
+            {% set other = t.seller if current_user.id == t.buyer_id else t.buyer %}
+            {% set unread = t.unread_for(current_user) %}
+            {% set latest = t.latest_message() %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start"
+               href="{{ url_for('messaging.thread', conversation_id=t.id) }}">
+                <div>
+                    <div class="fw-semibold">
+                        {{ other.full_name }}
+                        <span class="text-muted small ms-2">
+                            about {{ t.car.year }} {{ t.car.make }} {{ t.car.model }}
+                        </span>
+                    </div>
+                    {% if latest %}
+                        <div class="text-muted small">
+                            {{ "You: " if latest.sender_id == current_user.id else "" }}{{ latest.body[:120] }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <div class="text-muted small">{{ t.updated_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    {% if unread %}<span class="badge bg-danger">{{ unread }}</span>{% endif %}
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="far fa-comment-dots fa-4x mb-3"></i>
+        <h3>No conversations yet</h3>
+        <p>Open any car listing and click "Message Seller" to start a conversation.</p>
+    </div>
+{% endif %}
+{% endblock %}

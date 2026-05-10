@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Napak Wheels{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+  <h1 class="h3 mb-0"><i class="fas fa-shield-halved me-2"></i>Admin Dashboard</h1>
+  <div class="btn-group btn-group-sm">
+    <a href="{{ url_for('admin.analytics') }}" class="btn btn-outline-primary">
+      <i class="fas fa-chart-line me-1"></i>Analytics
+    </a>
+    <a href="{{ url_for('admin_db.index') }}" class="btn btn-outline-dark">
+      <i class="fas fa-database me-1"></i>DB admin
+    </a>
+    <div class="btn-group btn-group-sm" role="group">
+      <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fas fa-file-csv me-1"></i>Export CSV
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{{ url_for('admin.export_cars') }}">Cars</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('admin.export_users') }}">Users</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('admin.export_reports') }}">Reports</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  {% for label, value, link, sub in [
+      ('Users', stats.users, url_for('admin.users'), None),
+      ('Total cars', stats.cars, url_for('admin.cars'), None),
+      ('Active listings', stats.active_cars, url_for('admin.cars', show='active'), None),
+      ('Sold', stats.sold_cars, url_for('admin.cars'), '%.1f%% conversion'|format(stats.sold_pct)),
+      ('Open reports', stats.open_reports, url_for('admin.reports'), None),
+      ('Offers', stats.offers, '#', None),
+      ('Test drives', stats.test_drives, '#', None),
+      ('Views today', stats.views_today, url_for('admin.analytics'), '%s total'|format(stats.total_views)),
+  ] %}
+    <div class="col-sm-6 col-md-4 col-lg-3">
+      <a href="{{ link }}" class="card text-decoration-none text-dark h-100">
+        <div class="card-body">
+          <div class="text-muted small">{{ label }}</div>
+          <div class="h3 mb-0">{{ value }}</div>
+          {% if sub %}<div class="small text-muted">{{ sub }}</div>{% endif %}
+        </div>
+      </a>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <div class="card-header"><strong>Recent reports</strong></div>
+  <div class="list-group list-group-flush">
+    {% for r in recent_reports %}
+      <a class="list-group-item list-group-item-action" href="{{ url_for('admin.report_detail', report_id=r.id) }}">
+        <div class="d-flex justify-content-between">
+          <div>
+            <strong>{{ r.reason_label }}</strong>
+            on {{ r.car.year }} {{ r.car.make }} {{ r.car.model }}
+          </div>
+          <span class="badge bg-secondary">{{ r.status }}</span>
+        </div>
+        <div class="text-muted small">by {{ r.reporter.full_name }} &middot; {{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+      </a>
+    {% else %}
+      <div class="list-group-item text-muted">No reports yet.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

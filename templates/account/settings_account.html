@@ -1,0 +1,48 @@
+{% extends "account/_settings_layout.html" %}
+
+{% block settings_title %}Account{% endblock %}
+
+{% block settings_content %}
+<div class="card settings-card">
+  <div class="card-body p-4">
+    <header class="settings-card-header">
+      <h2 class="h5 mb-1">Account information</h2>
+      <p class="text-secondary small mb-0">Update your name, email, and contact details.</p>
+    </header>
+
+    <form method="POST" class="settings-form mt-4" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">{{ form.full_name.label }}</label>
+          {{ form.full_name(class="form-control", placeholder="Jane Doe") }}
+          {% for err in form.full_name.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ form.email.label }}</label>
+          {{ form.email(class="form-control", placeholder="you@example.com", autocomplete="email") }}
+          {% for err in form.email.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ form.phone.label }}</label>
+          {{ form.phone(class="form-control", placeholder="0300-1234567", autocomplete="tel") }}
+          {% for err in form.phone.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">{{ form.location.label }}</label>
+          {{ form.location(class="form-control", placeholder="Lahore") }}
+          {% for err in form.location.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+        </div>
+      </div>
+
+      <div class="settings-actions">
+        <a href="{{ url_for('account.profile') }}" class="btn btn-link text-secondary">Cancel</a>
+        <button type="submit" class="btn btn-dark">
+          <i class="fas fa-floppy-disk me-2"></i>Save changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

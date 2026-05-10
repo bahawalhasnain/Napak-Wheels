@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Test Drive - Napak Wheels{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3"><i class="fas fa-key me-2"></i>Test Drive Request</h1>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Car:</strong>
+                    <a href="{{ url_for('main.car_detail', id=drive.car.id) }}">
+                        {{ drive.car.year }} {{ drive.car.make }} {{ drive.car.model }}
+                    </a>
+                </p>
+                <p><strong>When:</strong> {{ drive.requested_at.strftime('%A, %d %B %Y, %H:%M') }}
+                    ({{ drive.duration_minutes }} min)</p>
+                <p><strong>Where:</strong> {{ drive.location or '—' }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Status:</strong>
+                    <span class="badge bg-{{
+                        {'requested': 'warning text-dark',
+                         'confirmed': 'success',
+                         'declined': 'secondary',
+                         'cancelled': 'secondary',
+                         'completed': 'primary'}.get(drive.status, 'secondary')
+                    }}">{{ drive.status }}</span>
+                </p>
+                <p><strong>Buyer:</strong> {{ drive.buyer.full_name }}</p>
+                <p><strong>Seller:</strong> {{ drive.seller.full_name }}</p>
+            </div>
+        </div>
+        {% if drive.message %}
+            <hr><strong>Buyer's note:</strong><div class="text-muted">{{ drive.message }}</div>
+        {% endif %}
+        {% if drive.seller_response %}
+            <hr><strong>Seller's response:</strong><div class="text-muted">{{ drive.seller_response }}</div>
+        {% endif %}
+    </div>
+</div>
+
+{% if drive.status in ['requested', 'confirmed'] %}
+    <div class="card">
+        <div class="card-header"><strong>Actions</strong></div>
+        <div class="card-body">
+            {% if is_seller %}
+                <form method="POST" class="row g-2 align-items-end">
+                    {{ response_form.hidden_tag() }}
+                    <div class="col-md-8">
+                        <label class="form-label">Response (optional)</label>
+                        {{ response_form.seller_response(class="form-control", rows=2) }}
+                    </div>
+                    <div class="col-md-4 d-grid gap-2">
+                        {% if drive.status == 'requested' %}
+                            <button formaction="{{ url_for('test_drives.confirm', drive_id=drive.id) }}" class="btn btn-success">Confirm</button>
+                            <button formaction="{{ url_for('test_drives.decline', drive_id=drive.id) }}" class="btn btn-outline-secondary">Decline</button>
+                        {% else %}
+                            <button formaction="{{ url_for('test_drives.complete', drive_id=drive.id) }}" class="btn btn-primary">Mark Completed</button>
+                        {% endif %}
+                    </div>
+                </form>
+            {% else %}
+                <form method="POST" action="{{ url_for('test_drives.cancel', drive_id=drive.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button class="btn btn-outline-danger">Cancel my request</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

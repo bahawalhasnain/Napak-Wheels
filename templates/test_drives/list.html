@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Sent' if mode == 'sent' else 'Received' }} Test Drives{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">
+        <i class="fas fa-key me-2"></i>
+        {{ 'Test Drives I Requested' if mode == 'sent' else 'Test Drive Requests' }}
+    </h1>
+    <div class="btn-group">
+        <a href="{{ url_for('test_drives.received') }}" class="btn btn-sm btn-outline-secondary {{ 'active' if mode == 'received' }}">Received</a>
+        <a href="{{ url_for('test_drives.sent') }}" class="btn btn-sm btn-outline-secondary {{ 'active' if mode == 'sent' }}">Sent</a>
+    </div>
+</div>
+
+{% if drives %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Car</th>
+                    <th>{{ 'Buyer' if mode == 'received' else 'Seller' }}</th>
+                    <th>When</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in drives %}
+                    {% set party = d.buyer if mode == 'received' else d.seller %}
+                    <tr>
+                        <td><a href="{{ url_for('main.car_detail', id=d.car.id) }}">
+                            {{ d.car.year }} {{ d.car.make }} {{ d.car.model }}</a></td>
+                        <td>{{ party.full_name }}</td>
+                        <td>{{ d.requested_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <span class="badge bg-{{
+                                {'requested': 'warning text-dark',
+                                 'confirmed': 'success',
+                                 'declined': 'secondary',
+                                 'cancelled': 'secondary',
+                                 'completed': 'primary'}.get(d.status, 'secondary')
+                            }}">{{ d.status }}</span>
+                        </td>
+                        <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('test_drives.detail', drive_id=d.id) }}">Open</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="text-muted text-center py-4">Nothing scheduled yet.</p>
+{% endif %}
+{% endblock %}

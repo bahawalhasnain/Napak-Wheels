@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Report #{{ report.id }} - Admin{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3"><i class="fas fa-flag text-danger me-2"></i>Report #{{ report.id }}</h1>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <p><strong>Listing:</strong>
+            <a href="{{ url_for('main.car_detail', id=report.car.id) }}">
+                {{ report.car.year }} {{ report.car.make }} {{ report.car.model }}
+            </a>
+            {% if report.car.is_taken_down %}<span class="badge bg-danger ms-2">taken down</span>{% endif %}
+        </p>
+        <p><strong>Reporter:</strong> {{ report.reporter.full_name }} ({{ report.reporter.email }})</p>
+        <p><strong>Reason:</strong> {{ report.reason_label }}</p>
+        <p><strong>Status:</strong> <span class="badge bg-secondary">{{ report.status }}</span></p>
+        {% if report.details %}
+            <hr><strong>Details</strong><div class="text-muted">{{ report.details }}</div>
+        {% endif %}
+        {% if report.review_note %}
+            <hr><strong>Reviewer note</strong><div class="text-muted">{{ report.review_note }}</div>
+        {% endif %}
+    </div>
+</div>
+
+<form method="POST" class="card form-surface-card p-4">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        <label class="form-label">{{ form.review_note.label.text }}</label>
+        {{ form.review_note(class="form-control", rows=3) }}
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <button formaction="{{ url_for('admin.report_action', report_id=report.id, action='dismiss') }}" class="btn btn-outline-secondary">Dismiss</button>
+        <button formaction="{{ url_for('admin.report_action', report_id=report.id, action='review') }}" class="btn btn-outline-primary">Mark Reviewed</button>
+        {% if report.car and not report.car.is_taken_down %}
+            <button formaction="{{ url_for('admin.report_action', report_id=report.id, action='takedown') }}" class="btn btn-danger">Take Down Listing</button>
+        {% else %}
+            <button formaction="{{ url_for('admin.report_action', report_id=report.id, action='restore') }}" class="btn btn-success">Restore Listing</button>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "_macros.html" import avatar, stat_tile, empty_state %}
+
+{% block title %}{{ current_user.full_name }} - Profile{% endblock %}
+
+{% block content %}
+<div class="profile-shell">
+
+  <!-- Header card -->
+  <section class="profile-header card">
+    <div class="profile-header-body">
+      {{ avatar(current_user.full_name, current_user.email, size=88, class_='profile-avatar') }}
+
+      <div class="profile-identity-text">
+        <h1 class="profile-name">
+          {{ current_user.full_name }}
+          {% if current_user.is_admin %}
+            <span class="badge bg-warning text-dark ms-2" title="Administrator">
+              <i class="fas fa-shield-halved me-1"></i>Admin
+            </span>
+          {% endif %}
+        </h1>
+        <ul class="profile-meta">
+          <li><i class="far fa-envelope"></i>{{ current_user.email }}</li>
+          {% if current_user.phone %}
+            <li><i class="fas fa-phone"></i>{{ current_user.phone }}</li>
+          {% endif %}
+          {% if current_user.location %}
+            <li><i class="fas fa-location-dot"></i>{{ current_user.location }}</li>
+          {% endif %}
+          <li><i class="far fa-calendar"></i>Member since {{ current_user.date_created.strftime('%b %Y') }}</li>
+        </ul>
+      </div>
+
+      <div class="profile-actions">
+        <a href="{{ url_for('account.settings_account') }}" class="btn btn-dark">
+          <i class="fas fa-pen me-2"></i>Edit profile
+        </a>
+        <a href="{{ url_for('account.settings') }}" class="btn btn-outline-secondary">
+          <i class="fas fa-gear me-2"></i>Settings
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats: 6 tiles in a clean responsive grid (2 / 3 / 6 columns).
+       SOLD is combined into the LISTINGS tile's sub-label so we never get an
+       orphan tile on the second row. -->
+  <section class="profile-stats">
+    {{ stat_tile(
+        'Listings',
+        stats.listings,
+        icon='fas fa-car',
+        sub=(stats.active_listings ~ ' active · ' ~ stats.sold_listings ~ ' sold')
+    ) }}
+    {{ stat_tile('Favorites', stats.favorites, icon='fas fa-heart') }}
+    {{ stat_tile('Saved searches', stats.saved_searches, icon='fas fa-bookmark') }}
+    {{ stat_tile('Offers made', stats.offers_made, icon='fas fa-handshake') }}
+    {{ stat_tile('Offers received', stats.offers_received, icon='fas fa-inbox') }}
+    {{ stat_tile('Conversations', stats.conversations, icon='fas fa-comments') }}
+  </section>
+
+  <!-- Two-column lower body -->
+  <div class="profile-grid">
+    <section class="card profile-section">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <strong><i class="fas fa-car me-2"></i>My recent listings</strong>
+        <a class="small" href="{{ url_for('main.my_listings') }}">View all</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for car in recent_listings %}
+          <a class="list-group-item list-group-item-action profile-list-item"
+             href="{{ url_for('main.car_detail', id=car.id) }}">
+            <div class="profile-list-thumb">
+              {% if car.primary_photo %}
+                <img src="{{ url_for('main.uploaded_file', filename=car.primary_photo) }}" alt="">
+              {% else %}
+                <i class="fas fa-car"></i>
+              {% endif %}
+            </div>
+            <div class="profile-list-text">
+              <div class="profile-list-title">{{ car.year }} {{ car.make }} {{ car.model }}</div>
+              <div class="profile-list-meta">
+                <span class="text-secondary">{{ car.location }}</span>
+                <span class="text-dark fw-semibold">{{ car.formatted_price }}</span>
+              </div>
+            </div>
+            <div class="profile-list-status">
+              {% if car.is_sold %}<span class="badge bg-success">Sold</span>
+              {% elif car.is_taken_down %}<span class="badge bg-danger">Hidden</span>
+              {% else %}<span class="badge bg-secondary">Active</span>{% endif %}
+            </div>
+          </a>
+        {% else %}
+          {{ empty_state('fas fa-car-side', 'No listings yet', 'Post your first car and reach thousands of buyers.', 'List a car', url_for('main.add_car')) }}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="card profile-section">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <strong><i class="fas fa-heart me-2"></i>Recent favorites</strong>
+        <a class="small" href="{{ url_for('main.my_favorites') }}">View all</a>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for car in recent_favorites %}
+          <a class="list-group-item list-group-item-action profile-list-item"
+             href="{{ url_for('main.car_detail', id=car.id) }}">
+            <div class="profile-list-thumb">
+              {% if car.primary_photo %}
+                <img src="{{ url_for('main.uploaded_file', filename=car.primary_photo) }}" alt="">
+              {% else %}
+                <i class="fas fa-car"></i>
+              {% endif %}
+            </div>
+            <div class="profile-list-text">
+              <div class="profile-list-title">{{ car.year }} {{ car.make }} {{ car.model }}</div>
+              <div class="profile-list-meta">
+                <span class="text-secondary">{{ car.location }}</span>
+                <span class="text-dark fw-semibold">{{ car.formatted_price }}</span>
+              </div>
+            </div>
+          </a>
+        {% else %}
+          {{ empty_state('far fa-heart', 'No favorites yet', 'Tap the heart on any listing to save it for later.', 'Browse cars', url_for('main.index')) }}
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+</div>
+{% endblock %}

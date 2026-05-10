@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Cars{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0"><i class="fas fa-car me-2"></i>Listings</h1>
+    <div class="btn-group">
+        {% for opt in ['all', 'active', 'taken_down'] %}
+            <a href="{{ url_for('admin.cars', show=opt) }}"
+               class="btn btn-sm btn-outline-secondary {{ 'active' if show == opt }}">{{ opt }}</a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead><tr>
+            <th>Posted</th><th>Car</th><th>Owner</th><th>Price</th><th>Status</th><th></th>
+        </tr></thead>
+        <tbody>
+            {% for c in cars %}
+                <tr>
+                    <td>{{ c.date_posted.strftime('%Y-%m-%d') }}</td>
+                    <td><a href="{{ url_for('main.car_detail', id=c.id) }}">{{ c.year }} {{ c.make }} {{ c.model }}</a></td>
+                    <td>{{ c.owner.email if c.owner else '—' }}</td>
+                    <td>{{ c.formatted_price }}</td>
+                    <td>
+                        {% if c.is_sold %}<span class="badge bg-success">sold</span>{% endif %}
+                        {% if c.is_taken_down %}<span class="badge bg-danger">taken down</span>{% endif %}
+                        {% if not c.is_sold and not c.is_taken_down %}
+                            <span class="badge bg-light text-dark border">live</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin.toggle_takedown', car_id=c.id, show=show) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button class="btn btn-sm btn-outline-secondary">
+                                {{ 'Restore' if c.is_taken_down else 'Take down' }}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

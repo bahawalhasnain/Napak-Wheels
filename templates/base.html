@@ -1,78 +1,317 @@
+{% from "_macros.html" import avatar %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Car Marketplace{% endblock %}</title>
+    <meta name="theme-color" content="#0f172a">
+    <title>{% block title %}Napak Wheels{% endblock %}</title>
+
+    {# Inline theme init - runs before CSS to prevent flash of wrong theme #}
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("nw-theme");
+          var theme = saved
+            || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg app-navbar border-bottom">
-        <div class="container py-1">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <i class="fas fa-car-side me-2"></i>Napak Wheels
+<body class="{% block body_class %}{% endblock %}">
+
+    <nav class="navbar navbar-expand-lg app-navbar">
+        <div class="container-xl">
+            <a class="navbar-brand app-brand" href="{{ url_for('main.index') }}">
+                <span class="app-brand-mark"><i class="fas fa-car-side"></i></span>
+                <span class="app-brand-text">Napak Wheels</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                {% if current_user %}
-                    <ul class="navbar-nav me-auto">
+
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="navbar-nav me-auto app-nav">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.index' }}"
+                           href="{{ url_for('main.index') }}">
+                           <i class="fas fa-magnifying-glass d-lg-none me-1"></i>Browse
+                        </a>
+                    </li>
+                    {% if current_user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.index') }}">Browse Cars</a>
+                            <a class="nav-link {{ 'active' if request.endpoint == 'main.add_car' }}"
+                               href="{{ url_for('main.add_car') }}">
+                                <i class="fas fa-plus d-lg-none me-1"></i>Sell
+                            </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.add_car') }}">Sell Your Car</a>
+                            <a class="nav-link {{ 'active' if request.endpoint == 'main.my_listings' }}"
+                               href="{{ url_for('main.my_listings') }}">
+                                <i class="fas fa-list d-lg-none me-1"></i>My Listings
+                            </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.my_listings') }}">My Listings</a>
+                        {% set unread_msgs = current_user.unread_message_count() %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-bolt d-lg-none me-1"></i>Activity
+                                {% if unread_msgs %}<span class="nav-pill-badge">{{ unread_msgs }}</span>{% endif %}
+                            </a>
+                            <ul class="dropdown-menu app-dropdown">
+                                <li class="dropdown-header">Messaging</li>
+                                <li>
+                                    <a class="dropdown-item d-flex justify-content-between align-items-center"
+                                       href="{{ url_for('messaging.inbox') }}">
+                                        <span><i class="fas fa-comments fa-fw me-2"></i>Messages</span>
+                                        {% if unread_msgs %}<span class="badge bg-danger rounded-pill">{{ unread_msgs }}</span>{% endif %}
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="dropdown-header">Negotiation</li>
+                                <li><a class="dropdown-item" href="{{ url_for('offers.received') }}"><i class="fas fa-inbox fa-fw me-2"></i>Offers received</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('offers.sent') }}"><i class="fas fa-paper-plane fa-fw me-2"></i>Offers sent</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('test_drives.received') }}"><i class="fas fa-key fa-fw me-2"></i>Test drives received</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('test_drives.sent') }}"><i class="fas fa-car fa-fw me-2"></i>Test drives sent</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="dropdown-header">Saved</li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.my_favorites') }}"><i class="fas fa-heart fa-fw me-2 text-danger"></i>Favorites</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('saved_searches.list_searches') }}"><i class="fas fa-bookmark fa-fw me-2"></i>Saved searches</a></li>
+                            </ul>
                         </li>
-                    </ul>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="text-secondary small">Signed in as {{ current_user.full_name }}</span>
-                        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('main.logout') }}">Log out</a>
+                        {% if current_user.is_admin %}
+                            <li class="nav-item">
+                                <a class="nav-link admin-link" href="{{ url_for('admin.dashboard') }}">
+                                    <i class="fas fa-shield-halved me-1"></i>Admin
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+
+                {% if current_user.is_authenticated %}
+                    {% set unread_notifs = current_user.unread_notification_count() %}
+                    <div class="d-flex align-items-center gap-2 app-nav-tools">
+                        <button type="button" class="theme-toggle" data-theme-toggle
+                                title="Toggle theme" aria-label="Toggle dark mode">
+                            <i class="fas fa-sun theme-toggle-sun" aria-hidden="true"></i>
+                            <i class="fas fa-moon theme-toggle-moon" aria-hidden="true"></i>
+                        </button>
+                        <a class="nav-icon-btn position-relative"
+                           href="{{ url_for('notifications.list_notifications') }}"
+                           title="Notifications" aria-label="Notifications">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notifs %}
+                                <span class="nav-icon-badge">{{ unread_notifs if unread_notifs < 100 else '99+' }}</span>
+                            {% endif %}
+                        </a>
+
+                        <div class="dropdown user-menu">
+                            <button class="user-menu-btn" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false"
+                                    aria-label="User menu">
+                                {{ avatar(current_user.full_name, current_user.email, size=36) }}
+                                <span class="user-menu-name d-none d-xl-inline">{{ current_user.full_name.split()[0] }}</span>
+                                <i class="fas fa-chevron-down user-menu-caret"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end app-dropdown user-menu-dropdown">
+                                <li class="user-menu-head">
+                                    {{ avatar(current_user.full_name, current_user.email, size=44) }}
+                                    <div class="user-menu-head-text">
+                                        <strong>{{ current_user.full_name }}</strong>
+                                        <span>{{ current_user.email }}</span>
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('account.profile') }}"><i class="fas fa-user fa-fw me-2"></i>Profile</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('account.settings') }}"><i class="fas fa-gear fa-fw me-2"></i>Settings</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.my_listings') }}"><i class="fas fa-car fa-fw me-2"></i>My listings</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('main.my_favorites') }}"><i class="fas fa-heart fa-fw me-2"></i>Favorites</a></li>
+                                {% if current_user.is_admin %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-shield-halved fa-fw me-2 text-warning"></i>Admin dashboard</a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('main.logout') }}"><i class="fas fa-right-from-bracket fa-fw me-2"></i>Sign out</a></li>
+                            </ul>
+                        </div>
                     </div>
                 {% else %}
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('main.login') }}">Login</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-dark btn-sm ms-2" href="{{ url_for('main.signup') }}">Sign Up</a>
-                        </li>
-                    </ul>
+                    <div class="d-flex align-items-center gap-2 app-nav-tools">
+                        <button type="button" class="theme-toggle" data-theme-toggle
+                                title="Toggle theme" aria-label="Toggle dark mode">
+                            <i class="fas fa-sun theme-toggle-sun" aria-hidden="true"></i>
+                            <i class="fas fa-moon theme-toggle-moon" aria-hidden="true"></i>
+                        </button>
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('main.login') }}">Login</a>
+                        <a class="btn btn-dark btn-sm" href="{{ url_for('main.signup') }}">Sign up</a>
+                    </div>
                 {% endif %}
             </div>
         </div>
     </nav>
 
-    <main class="flex-grow-1 py-4 app-shell">
-        <div class="container app-container">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+    {# Floating toast container for flash messages #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="app-toast-container" aria-live="polite" aria-atomic="true">
+                {% for category, message in messages %}
+                    {% set cat = 'danger' if category == 'error' else category %}
+                    {% set icons = {
+                        'success': 'fas fa-circle-check',
+                        'danger':  'fas fa-circle-exclamation',
+                        'warning': 'fas fa-triangle-exclamation',
+                        'info':    'fas fa-circle-info'
+                    } %}
+                    <div class="app-toast app-toast-{{ cat }}" role="alert">
+                        <i class="app-toast-icon {{ icons.get(cat, 'fas fa-circle-info') }}"></i>
+                        <div class="app-toast-body">{{ message }}</div>
+                        <button type="button" class="app-toast-close" aria-label="Dismiss">
+                            <i class="fas fa-xmark"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 
+    <main class="flex-grow-1 py-4 app-shell">
+        <div class="container-xl app-container">
             {% block content %}{% endblock %}
         </div>
     </main>
 
-    <footer class="app-footer border-top py-4 mt-5">
-        <div class="container app-container d-flex justify-content-between text-secondary small">
-            <span>Napak Wheels</span>
-            <span>&copy; 2026</span>
+    <footer class="app-footer">
+        <div class="container-xl">
+            <div class="app-footer-grid">
+                <div class="app-footer-brand">
+                    <a class="app-brand" href="{{ url_for('main.index') }}">
+                        <span class="app-brand-mark"><i class="fas fa-car-side"></i></span>
+                        <span class="app-brand-text">Napak Wheels</span>
+                    </a>
+                    <p class="text-secondary small mt-2 mb-3" style="max-width:280px;">
+                        Pakistan's modern marketplace for buying and selling cars. Safer chats,
+                        smarter offers, fairer prices.
+                    </p>
+                    <div class="app-footer-socials">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-x-twitter"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="app-footer-heading">Explore</div>
+                    <ul class="app-footer-links">
+                        <li><a href="{{ url_for('main.index') }}">Browse cars</a></li>
+                        <li><a href="{{ url_for('main.add_car') if current_user.is_authenticated else url_for('main.signup') }}">Sell your car</a></li>
+                        {% if current_user.is_authenticated %}
+                            <li><a href="{{ url_for('main.my_favorites') }}">Favorites</a></li>
+                            <li><a href="{{ url_for('saved_searches.list_searches') }}">Saved searches</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div>
+                    <div class="app-footer-heading">Account</div>
+                    <ul class="app-footer-links">
+                        {% if current_user.is_authenticated %}
+                            <li><a href="{{ url_for('account.profile') }}">Profile</a></li>
+                            <li><a href="{{ url_for('account.settings') }}">Settings</a></li>
+                            <li><a href="{{ url_for('main.logout') }}">Sign out</a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('main.login') }}">Login</a></li>
+                            <li><a href="{{ url_for('main.signup') }}">Create account</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div>
+                    <div class="app-footer-heading">Support</div>
+                    <ul class="app-footer-links">
+                        <li><a href="#">Help center</a></li>
+                        <li><a href="#">Contact us</a></li>
+                        <li><a href="#">Safety tips</a></li>
+                        <li><a href="#">Report an issue</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <div class="app-footer-heading">Legal</div>
+                    <ul class="app-footer-links">
+                        <li><a href="#">Terms of service</a></li>
+                        <li><a href="#">Privacy policy</a></li>
+                        <li><a href="#">Cookies</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="app-footer-bottom">
+                <span>&copy; 2026 Napak Wheels. All rights reserved.</span>
+                <span class="text-secondary small">Made with <i class="fas fa-heart text-danger"></i> in Pakistan</span>
+            </div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+      // Toast auto-dismiss
+      (function () {
+        document.querySelectorAll('.app-toast').forEach(function (toast) {
+          var dismiss = function () {
+            toast.classList.add('is-leaving');
+            setTimeout(function () { toast.remove(); }, 220);
+          };
+          var btn = toast.querySelector('.app-toast-close');
+          if (btn) btn.addEventListener('click', dismiss);
+          if (!toast.classList.contains('app-toast-danger')) {
+            setTimeout(dismiss, 5000);
+          }
+        });
+      })();
+
+      // Theme toggle - light <-> dark, persisted to localStorage
+      (function () {
+        var root = document.documentElement;
+        var setTheme = function (theme) {
+          root.setAttribute("data-theme", theme);
+          try { localStorage.setItem("nw-theme", theme); } catch (e) {}
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute("content", theme === "dark" ? "#0b1220" : "#0f172a");
+        };
+        document.querySelectorAll("[data-theme-toggle]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var current = root.getAttribute("data-theme") || "light";
+            setTheme(current === "dark" ? "light" : "dark");
+          });
+        });
+        // Live-follow OS preference if user hasn't set one explicitly
+        if (window.matchMedia) {
+          var mq = window.matchMedia("(prefers-color-scheme: dark)");
+          var handler = function (e) {
+            try {
+              if (!localStorage.getItem("nw-theme")) {
+                setTheme(e.matches ? "dark" : "light");
+                try { localStorage.removeItem("nw-theme"); } catch (_) {}
+              }
+            } catch (_) {}
+          };
+          if (mq.addEventListener) mq.addEventListener("change", handler);
+          else if (mq.addListener) mq.addListener(handler);
+        }
+      })();
+    </script>
 </body>
 </html>
