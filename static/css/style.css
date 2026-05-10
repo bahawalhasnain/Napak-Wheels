@@ -932,9 +932,36 @@ body.chat-page .app-footer {
     border: 1px solid var(--app-border);
     background: #f8fafc;
     resize: none;
+    overflow-y: auto;
     max-height: 140px;
     line-height: 1.4;
     font-size: 0.95rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--app-muted) transparent;
+}
+
+/* Hide classic scrollbar up/down steppers (Chrome / Edge on Windows) */
+.chat-input::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-input::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+}
+
+.chat-input::-webkit-scrollbar-thumb {
+    background: var(--app-muted);
+    border-radius: 999px;
+}
+
+.chat-input::-webkit-scrollbar-thumb:hover {
+    background: var(--app-subtle);
+}
+
+.chat-input::-webkit-scrollbar-track {
+    background: transparent;
 }
 
 .chat-input:focus {
@@ -1811,7 +1838,7 @@ body.auth-page .app-toast-container {
 
 .app-toast-body {
     flex: 1;
-    color: #0f172a;
+    color: inherit;
     font-size: 0.9rem;
     line-height: 1.45;
 }

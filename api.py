@@ -72,7 +72,7 @@ def list_cars():
     })
 
 
-@api_bp.route("/cars/<int:car_id>", methods=["GET"])
+@api_bp.route("/cars/<car_pid:car_id>", methods=["GET"])
 def get_car(car_id):
     car = Car.query.get_or_404(car_id)
     if car.is_taken_down:
@@ -104,7 +104,7 @@ def list_favorites():
     })
 
 
-@api_bp.route("/favorites/<int:car_id>", methods=["POST"])
+@api_bp.route("/favorites/<car_pid:car_id>", methods=["POST"])
 @login_required
 def add_favorite(car_id):
     car = Car.query.get_or_404(car_id)
@@ -120,7 +120,7 @@ def add_favorite(car_id):
     return jsonify({"status": "ok", "favorited": True}), 201
 
 
-@api_bp.route("/favorites/<int:car_id>", methods=["DELETE"])
+@api_bp.route("/favorites/<car_pid:car_id>", methods=["DELETE"])
 @login_required
 def remove_favorite(car_id):
     favorite = Favorite.query.filter_by(user_id=current_user.id, car_id=car_id).first()

@@ -110,7 +110,9 @@ def match_saved_searches_for_car(car_id: int) -> int:
         try:
             link = url_for("main.car_detail", id=car.id, _external=False)
         except Exception:
-            link = f"/car/{car.id}"
+            from url_ids import encode_url_id
+
+            link = "/car/" + encode_url_id("car", car.id)
 
         Notification.push(
             user_id=ss.user_id,

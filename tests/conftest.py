@@ -45,6 +45,19 @@ def client(app):
 
 
 @pytest.fixture
+def url_for_with_app(app):
+    """Build URLs the same way templates do (required for signed public ids)."""
+
+    def _url_for(endpoint: str, **values):
+        from flask import url_for as flask_url_for
+
+        with app.test_request_context("/"):
+            return flask_url_for(endpoint, **values)
+
+    return _url_for
+
+
+@pytest.fixture
 def user_factory(app):
     def _make(email="user@example.com", password="testpass123", full_name="Test User", is_admin=False):
         from extensions import db

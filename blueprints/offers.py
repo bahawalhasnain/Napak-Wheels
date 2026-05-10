@@ -20,7 +20,7 @@ def _notify(user_id, title, body, offer_id):
     )
 
 
-@offers_bp.route("/new/<int:car_id>", methods=["GET", "POST"])
+@offers_bp.route("/new/<car_pid:car_id>", methods=["GET", "POST"])
 @login_required
 def new(car_id):
     car = Car.query.get_or_404(car_id)
@@ -78,7 +78,7 @@ def received():
     return render_template("offers/list.html", offers=items, mode="received")
 
 
-@offers_bp.route("/<int:offer_id>", methods=["GET", "POST"])
+@offers_bp.route("/<offer_pid:offer_id>", methods=["GET", "POST"])
 @login_required
 def detail(offer_id):
     offer = Offer.query.get_or_404(offer_id)
@@ -123,7 +123,7 @@ def _ensure_open(offer):
     return True
 
 
-@offers_bp.route("/<int:offer_id>/accept", methods=["POST"])
+@offers_bp.route("/<offer_pid:offer_id>/accept", methods=["POST"])
 @login_required
 def accept(offer_id):
     offer = Offer.query.get_or_404(offer_id)
@@ -145,7 +145,7 @@ def accept(offer_id):
     return redirect(url_for("offers.detail", offer_id=offer.id))
 
 
-@offers_bp.route("/<int:offer_id>/reject", methods=["POST"])
+@offers_bp.route("/<offer_pid:offer_id>/reject", methods=["POST"])
 @login_required
 def reject(offer_id):
     offer = Offer.query.get_or_404(offer_id)
@@ -166,7 +166,7 @@ def reject(offer_id):
     return redirect(url_for("offers.detail", offer_id=offer.id))
 
 
-@offers_bp.route("/<int:offer_id>/withdraw", methods=["POST"])
+@offers_bp.route("/<offer_pid:offer_id>/withdraw", methods=["POST"])
 @login_required
 def withdraw(offer_id):
     offer = Offer.query.get_or_404(offer_id)
@@ -187,7 +187,7 @@ def withdraw(offer_id):
     return redirect(url_for("offers.detail", offer_id=offer.id))
 
 
-@offers_bp.route("/<int:offer_id>/counter", methods=["POST"])
+@offers_bp.route("/<offer_pid:offer_id>/counter", methods=["POST"])
 @login_required
 def counter(offer_id):
     parent = Offer.query.get_or_404(offer_id)

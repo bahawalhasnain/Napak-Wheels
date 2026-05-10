@@ -56,6 +56,11 @@ def create_app(config_object: str | type | None = None) -> Flask:
     with app.app_context():
         import models  # noqa: F401  - register tables for migrations
 
+        from url_ids import init_url_id_codec, register_url_id_converters
+
+        init_url_id_codec(app)
+        register_url_id_converters(app)
+
         from routes import bp as main_bp
         from api import api_bp
         from blueprints.messaging import messaging_bp

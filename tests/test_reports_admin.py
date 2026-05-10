@@ -1,10 +1,10 @@
-def test_user_can_report_listing(logged_in_client, user_factory, car_factory):
+def test_user_can_report_listing(logged_in_client, user_factory, car_factory, url_for_with_app):
     client, _user = logged_in_client
     seller = user_factory(email="seller-rep@example.com")
     car = car_factory(owner=seller)
 
     response = client.post(
-        f"/report/{car.id}",
+        url_for_with_app("reports.new", car_id=car.id),
         data={"reason": "spam", "details": "Looks suspicious."},
         follow_redirects=True,
     )
@@ -17,21 +17,21 @@ def test_user_can_report_listing(logged_in_client, user_factory, car_factory):
     assert r.status == Report.STATUS_OPEN
 
 
-def test_user_cannot_report_own_listing(logged_in_client, car_factory):
+def test_user_cannot_report_own_listing(logged_in_client, car_factory, url_for_with_app):
     client, user = logged_in_client
     car = car_factory(owner=user)
-    response = client.post(f"/report/{car.id}", data={"reason": "spam"})
+    response = client.post(url_for_with_app("reports.new", car_id=car.id), data={"reason": "spam"})
     assert response.status_code == 403
 
 
-def test_admin_can_take_down_listing(client, user_factory, car_factory):
+def test_admin_can_take_down_listing(client, user_factory, car_factory, url_for_with_app):
     seller = user_factory(email="rep-seller@example.com")
     reporter = user_factory(email="rep-reporter@example.com")
     admin = user_factory(email="rep-admin@example.com", is_admin=True)
     car = car_factory(owner=seller)
 
     client.post("/login", data={"email": reporter.email, "password": "testpass123"}, follow_redirects=True)
-    client.post(f"/report/{car.id}", data={"reason": "fraud"}, follow_redirects=True)
+    client.post(url_for_with_app("reports.new", car_id=car.id), data={"reason": "fraud"}, follow_redirects=True)
 
     from models import Report
     report = Report.query.first()
@@ -40,7 +40,7 @@ def test_admin_can_take_down_listing(client, user_factory, car_factory):
     client.post("/login", data={"email": admin.email, "password": "testpass123"}, follow_redirects=True)
 
     response = client.post(
-        f"/admin/reports/{report.id}/takedown",
+        url_for_with_app("admin.report_action", report_id=report.id, action="takedown"),
         data={"review_note": "removed"},
         follow_redirects=True,
     )

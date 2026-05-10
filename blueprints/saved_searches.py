@@ -75,7 +75,7 @@ def new():
     )
 
 
-@saved_searches_bp.route("/<int:search_id>/delete", methods=["POST"])
+@saved_searches_bp.route("/<search_pid:search_id>/delete", methods=["POST"])
 @login_required
 def delete(search_id):
     ss = SavedSearch.query.get_or_404(search_id)
@@ -87,7 +87,7 @@ def delete(search_id):
     return redirect(url_for("saved_searches.list_searches"))
 
 
-@saved_searches_bp.route("/<int:search_id>/toggle", methods=["POST"])
+@saved_searches_bp.route("/<search_pid:search_id>/toggle", methods=["POST"])
 @login_required
 def toggle(search_id):
     ss = SavedSearch.query.get_or_404(search_id)

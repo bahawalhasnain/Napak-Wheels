@@ -230,14 +230,14 @@ def reports():
     return render_template("admin/reports.html", reports=items, current_status=status)
 
 
-@admin_bp.route("/reports/<int:report_id>", methods=["GET", "POST"])
+@admin_bp.route("/reports/<report_pid:report_id>", methods=["GET", "POST"])
 def report_detail(report_id):
     report = Report.query.get_or_404(report_id)
     form = ReportReviewForm(obj=report)
     return render_template("admin/report_detail.html", report=report, form=form)
 
 
-@admin_bp.route("/reports/<int:report_id>/<string:action>", methods=["POST"])
+@admin_bp.route("/reports/<report_pid:report_id>/<string:action>", methods=["POST"])
 def report_action(report_id, action):
     report = Report.query.get_or_404(report_id)
     form = ReportReviewForm()
@@ -280,7 +280,7 @@ def users():
     return render_template("admin/users.html", users=items)
 
 
-@admin_bp.route("/users/<int:user_id>/toggle-admin", methods=["POST"])
+@admin_bp.route("/users/<user_pid:user_id>/toggle-admin", methods=["POST"])
 def toggle_admin(user_id):
     user = User.query.get_or_404(user_id)
     if user.id == current_user.id:
@@ -307,7 +307,7 @@ def cars():
     return render_template("admin/cars.html", cars=items, show=show)
 
 
-@admin_bp.route("/cars/<int:car_id>/toggle-takedown", methods=["POST"])
+@admin_bp.route("/cars/<car_pid:car_id>/toggle-takedown", methods=["POST"])
 def toggle_takedown(car_id):
     car = Car.query.get_or_404(car_id)
     car.is_taken_down = not car.is_taken_down

@@ -268,7 +268,7 @@ def index():
     )
 
 
-@bp.route("/car/<int:id>")
+@bp.route("/car/<car_pid:id>")
 def car_detail(id):
     car = Car.query.get_or_404(id)
     if car.is_taken_down and not (current_user.is_authenticated and (
@@ -348,7 +348,7 @@ def add_car():
     )
 
 
-@bp.route("/edit_car/<int:id>", methods=["GET", "POST"])
+@bp.route("/edit_car/<car_pid:id>", methods=["GET", "POST"])
 @login_required
 def edit_car(id):
     car = Car.query.get_or_404(id)
@@ -424,7 +424,7 @@ def my_listings():
     return render_template("my_listings.html", cars=cars)
 
 
-@bp.route("/delete_car/<int:id>", methods=["POST"])
+@bp.route("/delete_car/<car_pid:id>", methods=["POST"])
 @login_required
 def delete_car(id):
     car = Car.query.get_or_404(id)
@@ -452,7 +452,7 @@ def delete_car(id):
 # ---------------------------------------------------------------------------
 
 
-@bp.route("/favorite/<int:car_id>", methods=["POST"])
+@bp.route("/favorite/<car_pid:car_id>", methods=["POST"])
 @login_required
 def add_favorite(car_id):
     car = Car.query.get_or_404(car_id)
@@ -468,7 +468,7 @@ def add_favorite(car_id):
     return redirect(request.referrer or url_for("main.car_detail", id=car_id))
 
 
-@bp.route("/unfavorite/<int:car_id>", methods=["POST"])
+@bp.route("/unfavorite/<car_pid:car_id>", methods=["POST"])
 @login_required
 def remove_favorite(car_id):
     favorite = Favorite.query.filter_by(user_id=current_user.id, car_id=car_id).first()

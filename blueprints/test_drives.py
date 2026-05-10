@@ -44,7 +44,7 @@ def received():
     return render_template("test_drives/list.html", drives=items, mode="received")
 
 
-@test_drives_bp.route("/new/<int:car_id>", methods=["GET", "POST"])
+@test_drives_bp.route("/new/<car_pid:car_id>", methods=["GET", "POST"])
 @login_required
 def new(car_id):
     car = Car.query.get_or_404(car_id)
@@ -85,7 +85,7 @@ def new(car_id):
     return render_template("test_drives/new.html", form=form, car=car)
 
 
-@test_drives_bp.route("/<int:drive_id>", methods=["GET"])
+@test_drives_bp.route("/<drive_pid:drive_id>", methods=["GET"])
 @login_required
 def detail(drive_id):
     drive = TestDrive.query.get_or_404(drive_id)
@@ -119,25 +119,25 @@ def _seller_action(drive_id, status, message):
     return redirect(url_for("test_drives.detail", drive_id=drive.id))
 
 
-@test_drives_bp.route("/<int:drive_id>/confirm", methods=["POST"])
+@test_drives_bp.route("/<drive_pid:drive_id>/confirm", methods=["POST"])
 @login_required
 def confirm(drive_id):
     return _seller_action(drive_id, TestDrive.STATUS_CONFIRMED, "Test drive confirmed.")
 
 
-@test_drives_bp.route("/<int:drive_id>/decline", methods=["POST"])
+@test_drives_bp.route("/<drive_pid:drive_id>/decline", methods=["POST"])
 @login_required
 def decline(drive_id):
     return _seller_action(drive_id, TestDrive.STATUS_DECLINED, "Test drive declined.")
 
 
-@test_drives_bp.route("/<int:drive_id>/complete", methods=["POST"])
+@test_drives_bp.route("/<drive_pid:drive_id>/complete", methods=["POST"])
 @login_required
 def complete(drive_id):
     return _seller_action(drive_id, TestDrive.STATUS_COMPLETED, "Test drive marked completed.")
 
 
-@test_drives_bp.route("/<int:drive_id>/cancel", methods=["POST"])
+@test_drives_bp.route("/<drive_pid:drive_id>/cancel", methods=["POST"])
 @login_required
 def cancel(drive_id):
     drive = TestDrive.query.get_or_404(drive_id)

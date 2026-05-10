@@ -29,7 +29,7 @@ def inbox():
     return render_template("messaging/inbox.html", threads=threads)
 
 
-@messaging_bp.route("/start/<int:car_id>", methods=["GET", "POST"])
+@messaging_bp.route("/start/<car_pid:car_id>", methods=["GET", "POST"])
 @login_required
 def start(car_id):
     car = Car.query.get_or_404(car_id)
@@ -52,7 +52,7 @@ def start(car_id):
     return redirect(url_for("messaging.thread", conversation_id=convo.id))
 
 
-@messaging_bp.route("/<int:conversation_id>", methods=["GET", "POST"])
+@messaging_bp.route("/<convo_pid:conversation_id>", methods=["GET", "POST"])
 @login_required
 def thread(conversation_id):
     convo = Conversation.query.get_or_404(conversation_id)

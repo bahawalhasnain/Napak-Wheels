@@ -29,7 +29,7 @@ def list_notifications():
     return render_template("notifications/list.html", notifications=items)
 
 
-@notifications_bp.route("/<int:notif_id>/open")
+@notifications_bp.route("/<notif_pid:notif_id>/open")
 @login_required
 def open_notification(notif_id):
     notif = Notification.query.get_or_404(notif_id)

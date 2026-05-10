@@ -8,12 +8,15 @@ from __future__ import annotations
 # ---------------------------------------------------------------------------
 
 
-def test_anonymous_view_records_one_view_per_session_per_day(client, user_factory, car_factory):
+def test_anonymous_view_records_one_view_per_session_per_day(
+    client, user_factory, car_factory, url_for_with_app,
+):
     seller = user_factory(email="vt-seller@example.com")
     car = car_factory(owner=seller)
+    car_url = url_for_with_app("main.car_detail", id=car.id)
 
     for _ in range(3):
-        resp = client.get(f"/car/{car.id}")
+        resp = client.get(car_url)
         assert resp.status_code == 200
 
     from extensions import db
@@ -25,15 +28,18 @@ def test_anonymous_view_records_one_view_per_session_per_day(client, user_factor
     assert b"1 person viewed today" in resp.data
 
 
-def test_distinct_anonymous_visitors_each_count(app, user_factory, car_factory):
+def test_distinct_anonymous_visitors_each_count(
+    app, user_factory, car_factory, url_for_with_app,
+):
     seller = user_factory(email="vt-seller2@example.com")
     car = car_factory(owner=seller)
+    car_url = url_for_with_app("main.car_detail", id=car.id)
 
     client_a = app.test_client()
     client_b = app.test_client()
 
-    client_a.get(f"/car/{car.id}")
-    client_b.get(f"/car/{car.id}")
+    client_a.get(car_url)
+    client_b.get(car_url)
 
     from extensions import db
     from models import Car
@@ -42,12 +48,13 @@ def test_distinct_anonymous_visitors_each_count(app, user_factory, car_factory):
     assert refreshed.view_count == 2
 
 
-def test_owner_view_does_not_count(logged_in_client, car_factory):
+def test_owner_view_does_not_count(logged_in_client, car_factory, url_for_with_app):
     client, user = logged_in_client
     car = car_factory(owner=user)
+    car_url = url_for_with_app("main.car_detail", id=car.id)
 
-    client.get(f"/car/{car.id}")
-    client.get(f"/car/{car.id}")
+    client.get(car_url)
+    client.get(car_url)
 
     from extensions import db
     from models import Car, CarView
@@ -57,12 +64,14 @@ def test_owner_view_does_not_count(logged_in_client, car_factory):
     assert CarView.query.filter_by(car_id=car.id).count() == 0
 
 
-def test_admin_view_does_not_count(logged_in_admin, user_factory, car_factory):
+def test_admin_view_does_not_count(
+    logged_in_admin, user_factory, car_factory, url_for_with_app,
+):
     client, _admin = logged_in_admin
     seller = user_factory(email="vt-seller3@example.com")
     car = car_factory(owner=seller)
 
-    client.get(f"/car/{car.id}")
+    client.get(url_for_with_app("main.car_detail", id=car.id))
 
     from extensions import db
     from models import Car
@@ -71,15 +80,18 @@ def test_admin_view_does_not_count(logged_in_admin, user_factory, car_factory):
     assert refreshed.view_count == 0
 
 
-def test_authenticated_buyer_view_dedupes_per_day(client, user_factory, car_factory):
+def test_authenticated_buyer_view_dedupes_per_day(
+    client, user_factory, car_factory, url_for_with_app,
+):
     seller = user_factory(email="vt-seller4@example.com")
     buyer = user_factory(email="vt-buyer@example.com")
     car = car_factory(owner=seller)
+    car_url = url_for_with_app("main.car_detail", id=car.id)
 
     client.post("/login", data={"email": buyer.email, "password": "testpass123"}, follow_redirects=True)
 
-    client.get(f"/car/{car.id}")
-    client.get(f"/car/{car.id}")
+    client.get(car_url)
+    client.get(car_url)
 
     from extensions import db
     from models import Car, CarView

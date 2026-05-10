@@ -11,7 +11,7 @@ from models import Car, Report
 reports_bp = Blueprint("reports", __name__, url_prefix="/report")
 
 
-@reports_bp.route("/<int:car_id>", methods=["GET", "POST"])
+@reports_bp.route("/<car_pid:car_id>", methods=["GET", "POST"])
 @login_required
 def new(car_id):
     car = Car.query.get_or_404(car_id)
