@@ -11,6 +11,7 @@ class Config:
     """Base configuration loaded from environment variables."""
 
     SECRET_KEY = os.environ.get("SECRET_KEY", "change-me-in-env")
+    DEBUG = _bool(os.environ.get("FLASK_DEBUG"), False)
 
     WTF_CSRF_TIME_LIMIT = None
     WTF_CSRF_ENABLED = True
@@ -52,6 +53,7 @@ class Config:
 
 class TestConfig(Config):
     TESTING = True
+    DEBUG = False
     WTF_CSRF_ENABLED = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     SQLALCHEMY_ENGINE_OPTIONS = {}

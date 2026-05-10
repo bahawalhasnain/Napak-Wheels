@@ -129,6 +129,21 @@ python main.py
 
 App starts on `http://127.0.0.1:5000`.
 
+For local development you can enable the Flask debugger with `FLASK_DEBUG=1` in `.env`.
+
+## Production deployment
+
+The app is deployable as a standard Flask WSGI app. Before going live:
+
+1. **Environment** — Copy `.env.example` to `.env` on the server. Set a long random `SECRET_KEY`, production `DATABASE_URL`, `FLASK_DEBUG=0`, and `SESSION_COOKIE_SECURE=1` when using HTTPS.
+2. **Database** — Run `flask --app app db upgrade` against the production database.
+3. **Uploads** — Point `UPLOAD_FOLDER` at persistent storage (same path the process can write).
+4. **Process** — Use a production WSGI server (e.g. `gunicorn -w 4 -b 0.0.0.0:8000 "main:app"`), not `python main.py`.
+5. **Celery** — Optional but recommended for image processing and email: set `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` and run a worker.
+6. **Proxy** — The app uses `ProxyFix` for `X-Forwarded-*` headers; terminate TLS at your reverse proxy as usual.
+
+If `SECRET_KEY` is missing or left as the default, the app logs a warning on startup (non-debug, non-test mode).
+
 ## Background workers
 
 Without a broker, Celery runs tasks synchronously inside the request — perfect
@@ -175,7 +190,7 @@ mail — no external services required.
 | Method | Path                            | Description                      |
 | ------ | ------------------------------- | -------------------------------- |
 | GET    | `/api/v1/cars`                  | Paginated, filterable car list   |
-| GET    | `/api/v1/cars/<id>`             | Single car (with seller info)    |
+| GET    | `/api/v1/cars/<token>`          | Single car (signed id in URL)      |
 | GET    | `/api/v1/favorites`             | Current user's favorites         |
 | POST   | `/api/v1/favorites/<car_id>`    | Save a car                       |
 | DELETE | `/api/v1/favorites/<car_id>`    | Unsave a car                     |

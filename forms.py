@@ -1,3 +1,5 @@
+from datetime import date
+
 from flask_wtf import FlaskForm
 from flask_wtf.file import MultipleFileField, FileAllowed
 from wtforms import (
@@ -18,13 +20,28 @@ from wtforms.validators import (
     Length,
     NumberRange,
     Optional,
+    ValidationError,
 )
+
+
+class ModelYear:
+    """Allow 1900 .. current calendar year (evaluated when the form is validated)."""
+
+    def __init__(self, min_year: int = 1900):
+        self.min_year = min_year
+
+    def __call__(self, form, field):
+        if field.data is None:
+            return
+        max_y = date.today().year
+        if field.data < self.min_year or field.data > max_y:
+            raise ValidationError(f"Year must be between {self.min_year} and {max_y}.")
 
 
 class CarForm(FlaskForm):
     make = StringField('Make', validators=[DataRequired(), Length(max=50)])
     model = StringField('Model', validators=[DataRequired(), Length(max=50)])
-    year = IntegerField('Year', validators=[DataRequired(), NumberRange(min=1900, max=2025)])
+    year = IntegerField('Year', validators=[DataRequired(), ModelYear()])
     price = FloatField('Price (PKR)', validators=[DataRequired(), NumberRange(min=0)])
     mileage = IntegerField('Mileage', validators=[DataRequired(), NumberRange(min=0)])
     color = StringField('Color', validators=[DataRequired(), Length(max=30)])

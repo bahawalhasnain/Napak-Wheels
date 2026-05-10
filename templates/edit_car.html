@@ -38,7 +38,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">{{ form.year.label }}</label>
-                            {{ form.year(class="form-control") }}
+                            {{ form.year(class="form-control", min=1900, max=current_model_year_max()) }}
                             {% if form.year.errors %}
                                 <div class="text-danger">{{ form.year.errors[0] }}</div>
                             {% endif %}

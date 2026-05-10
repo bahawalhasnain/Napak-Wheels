@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import date
 from time import perf_counter
 
 import click
@@ -35,6 +36,14 @@ def create_app(config_object: str | type | None = None) -> Flask:
     logging.getLogger("werkzeug").setLevel(app.logger.level)
 
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
+    if not app.testing and not app.config.get("DEBUG"):
+        sk = (app.config.get("SECRET_KEY") or "").strip()
+        if not sk or sk == "change-me-in-env":
+            app.logger.warning(
+                "SECRET_KEY is missing or still the default. Set a strong random SECRET_KEY in the "
+                "environment before production (required for sessions, CSRF, and signed URLs)."
+            )
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -106,7 +115,11 @@ def _register_jinja_helpers(app: Flask) -> None:
         bucket = sum(ord(ch) for ch in seed) if seed else 0
         return _AVATAR_PALETTE[bucket % len(_AVATAR_PALETTE)]
 
+    def current_model_year_max() -> int:
+        return date.today().year
+
     app.jinja_env.globals["avatar_color"] = avatar_color
+    app.jinja_env.globals["current_model_year_max"] = current_model_year_max
 
 
 def _register_request_logging(app: Flask) -> None:
