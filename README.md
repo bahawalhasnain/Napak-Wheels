@@ -1,4 +1,4 @@
-# Napak Wheels V2
+# Car Marketplace
 
 Flask-based car marketplace with messaging, offers, test-drive booking, saved
 searches, favorites, in-app notifications, an admin moderation panel,
